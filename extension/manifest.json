@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "ScreenParty",
+  "version": "0.1.0",
+  "description": "Entre em salas e compartilhe sua tela em grupo.",
+  "action": {
+    "default_title": "ScreenParty",
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "http://localhost/*",
+    "https://localhost/*"
+  ]
+}
