@@ -51,7 +51,6 @@ function addVideo(stream, participant) {
     video = document.createElement('video');
     video.autoplay = true;
     video.playsInline = true;
-    video.controls = false;
     video.dataset.peer = participant.id;
     video.title = participant.name;
     video.className = 'remote-video';
@@ -93,9 +92,10 @@ async function createPeer(participant, initiator) {
   };
 
   pc.onconnectionstatechange = () => {
-    if (['failed', 'closed', 'disconnected'].includes(pc.connectionState)) {
+    if (['failed', 'closed'].includes(pc.connectionState)) {
       pc.close();
       peers.delete(participant.id);
+      removeVideo(participant.id);
     }
   };
 
@@ -107,26 +107,39 @@ async function createPeer(participant, initiator) {
   return pc;
 }
 
+async function negotiateWith(id) {
+  const pc = peers.get(id);
+  if (!pc) return;
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  send({ type: 'offer', target: id, offer: pc.localDescription });
+}
+
 async function startSharing() {
   try {
     screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
     shareScreen.textContent = '🛑 Parar compartilhamento';
+
     for (const [id, participant] of participants) {
       if (id === selfId) continue;
       const pc = peers.get(id) || await createPeer(participant, false);
-      for (const sender of pc.getSenders()) {
-        if (sender.track?.kind === 'video') {
-          const track = screenStream.getVideoTracks()[0];
-          if (track) await sender.replaceTrack(track);
-        }
+      const videoTrack = screenStream.getVideoTracks()[0];
+      const videoSender = pc.getSenders().find(sender => sender.track?.kind === 'video');
+      if (videoSender) {
+        await videoSender.replaceTrack(videoTrack);
+      } else {
+        pc.addTrack(videoTrack, screenStream);
       }
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      send({ type: 'offer', target: id, offer: pc.localDescription });
+      const audioTrack = screenStream.getAudioTracks()[0];
+      if (audioTrack && !pc.getSenders().some(sender => sender.track?.kind === 'audio')) {
+        pc.addTrack(audioTrack, screenStream);
+      }
+      await negotiateWith(id);
     }
+
     screenStream.getVideoTracks()[0]?.addEventListener('ended', stopSharing, { once: true });
   } catch (error) {
-    if (error.name !== 'NotAllowedError') console.error(error);
+    if (error.name !== 'NotAllowedError') console.error('Falha ao capturar tela:', error);
   }
 }
 
@@ -140,6 +153,7 @@ async function stopSharing() {
     for (const sender of pc.getSenders()) {
       if (sender.track) await sender.replaceTrack(null);
     }
+    await negotiateWith(id);
   }
 }
 
@@ -154,7 +168,7 @@ socket.addEventListener('message', async ({ data }) => {
     message.participants.forEach(p => participants.set(p.id, p));
     renderParticipants();
     for (const participant of message.participants) {
-      if (participant.id !== selfId) await createPeer(participant, selfId < participant.id);
+      if (participant.id !== selfId) await createPeer(participant, false);
     }
     return;
   }
