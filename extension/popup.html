@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ScreenParty</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header>
+        <span class="logo">SP</span>
+        <div>
+          <h1>ScreenParty</h1>
+          <p>Compartilhe sua tela em grupo.</p>
+        </div>
+      </header>
+
+      <section class="card">
+        <h2>Criar uma sala</h2>
+        <button id="createRoom">+ Criar sala</button>
+      </section>
+
+      <div class="divider"><span>ou</span></div>
+
+      <section class="card">
+        <h2>Entrar em uma sala</h2>
+        <label for="roomCode">Código da sala</label>
+        <input id="roomCode" maxlength="12" placeholder="ABC-123" autocomplete="off" />
+        <button id="joinRoom" class="secondary">Entrar na sala</button>
+      </section>
+
+      <p id="status" class="status" role="status"></p>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>
