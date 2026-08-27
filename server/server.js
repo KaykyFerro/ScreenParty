@@ -2,21 +2,36 @@ import express from 'express';
 import { createServer } from 'node:http';
 import { WebSocketServer } from 'ws';
 import crypto from 'node:crypto';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const httpServer = createServer(app);
 const wss = new WebSocketServer({ server: httpServer });
 const rooms = new Map();
+const ROOM_RE = /^([A-Z2-9]{3})-([A-Z2-9]{3})$/;
+
+app.disable('x-powered-by');
+app.use(express.static(path.join(__dirname, '../web'), { extensions: ['html'] }));
 
 function makeRoomCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  const part = () => Array.from({ length: 3 }, () => chars[crypto.randomInt(chars.length)]).join('');
-  return `${part()}-${part()}`;
+  let code;
+  do {
+    const part = () => Array.from({ length: 3 }, () => chars[crypto.randomInt(chars.length)]).join('');
+    code = `${part()}-${part()}`;
+  } while (rooms.has(code));
+  return code;
 }
 
 function getRoom(code) {
   if (!rooms.has(code)) rooms.set(code, new Set());
   return rooms.get(code);
+}
+
+function participantOf(socket) {
+  return { id: socket.id, name: socket.displayName };
 }
 
 function broadcast(room, payload, except = null) {
@@ -39,34 +54,50 @@ wss.on('connection', (socket) => {
     try {
       message = JSON.parse(raw.toString());
     } catch {
-      return socket.send(JSON.stringify({ type: 'error', message: 'Mensagem inválida.' }));
+      socket.send(JSON.stringify({ type: 'error', message: 'Mensagem inválida.' }));
+      return;
     }
 
     if (message.type === 'join') {
+      if (socket.roomCode) return;
       const code = String(message.room || '').toUpperCase();
-      if (!/^([A-Z2-9]{3})-([A-Z2-9]{3})$/.test(code)) {
-        return socket.send(JSON.stringify({ type: 'error', message: 'Código de sala inválido.' }));
+      if (!ROOM_RE.test(code)) {
+        socket.send(JSON.stringify({ type: 'error', message: 'Código de sala inválido.' }));
+        return;
       }
 
       socket.roomCode = code;
-      socket.displayName = String(message.name || 'Convidado').slice(0, 32);
+      socket.displayName = String(message.name || 'Convidado').trim().slice(0, 32) || 'Convidado';
       const room = getRoom(code);
       room.add(socket);
 
-      const participants = [...room].map((client) => ({ id: client.id, name: client.displayName }));
-      socket.send(JSON.stringify({ type: 'joined', room: code, selfId: socket.id, participants }));
-      broadcast(room, { type: 'participant-joined', participant: { id: socket.id, name: socket.displayName } }, socket);
+      socket.send(JSON.stringify({
+        type: 'joined',
+        room: code,
+        selfId: socket.id,
+        participants: [...room].map(participantOf)
+      }));
+      broadcast(room, { type: 'participant-joined', participant: participantOf(socket) }, socket);
       return;
     }
 
     if (!socket.roomCode) return;
-    const room = getRoom(socket.roomCode);
+    const room = rooms.get(socket.roomCode);
+    if (!room) return;
 
     if (['offer', 'answer', 'ice-candidate'].includes(message.type)) {
-      const target = [...room].find((client) => client.id === message.target);
+      const targetId = String(message.target || '');
+      const target = [...room].find((client) => client.id === targetId);
       if (target?.readyState === 1) {
         target.send(JSON.stringify({ ...message, sender: socket.id }));
       }
+      return;
+    }
+
+    if (message.type === 'chat') {
+      const text = String(message.text || '').trim().slice(0, 500);
+      if (!text) return;
+      broadcast(room, { type: 'chat', from: participantOf(socket), text });
     }
   });
 
@@ -81,4 +112,6 @@ wss.on('connection', (socket) => {
 });
 
 const PORT = Number(process.env.PORT || 8787);
-httpServer.listen(PORT, () => console.log(`ScreenParty server listening on ${PORT}`));
+httpServer.listen(PORT, '0.0.0.0', () => {
+  console.log(`ScreenParty listening on port ${PORT}`);
+});
