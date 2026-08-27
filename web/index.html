@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ScreenParty</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="landing">
+    <section class="landing-card">
+      <div class="brand-large"><span>SP</span><strong>ScreenParty</strong></div>
+      <p class="eyebrow">COMPARTILHAMENTO EM GRUPO</p>
+      <h1>Crie uma sala.<br>Compartilhe a tela.</h1>
+      <p class="lead">Entre em uma sala com seus amigos, colegas ou equipe e compartilhe a tela em tempo real.</p>
+
+      <label for="name">Seu nome</label>
+      <input id="name" maxlength="32" placeholder="Como devemos chamar você?" autocomplete="name">
+
+      <div class="actions">
+        <button id="create">＋ Criar sala</button>
+      </div>
+
+      <div class="join-row">
+        <input id="room" maxlength="7" placeholder="ABC-123" autocomplete="off" aria-label="Código da sala">
+        <button id="join" class="secondary">Entrar</button>
+      </div>
+      <p id="status" class="status" role="status"></p>
+    </section>
+  </main>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const name = $('name');
+    const room = $('room');
+    const status = $('status');
+    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+    function code() {
+      const part = () => Array.from({ length: 3 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
+      return part() + '-' + part();
+    }
+    function go(value) {
+      const normalized = value.trim().toUpperCase();
+      if (!/^[A-Z2-9]{3}-[A-Z2-9]{3}$/.test(normalized)) {
+        status.textContent = 'Use um código no formato ABC-123.';
+        return;
+      }
+      const user = encodeURIComponent((name.value.trim() || 'Convidado').slice(0, 32));
+      location.href = `room.html?room=${normalized}&name=${user}`;
+    }
+    $('create').addEventListener('click', () => go(code()));
+    $('join').addEventListener('click', () => go(room.value));
+    room.addEventListener('input', () => { room.value = room.value.toUpperCase(); });
+    room.addEventListener('keydown', (event) => { if (event.key === 'Enter') go(room.value); });
+  </script>
+</body>
+</html>
