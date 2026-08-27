@@ -1,20 +1,39 @@
 * { box-sizing: border-box; }
 body { margin: 0; min-height: 100vh; background: #080d18; color: #eef2ff; font-family: Inter, system-ui, sans-serif; }
+button, input { font: inherit; }
 .topbar { height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; border-bottom: 1px solid #1d2638; background: #0d1422; }
 .brand { display: flex; align-items: center; gap: 10px; }
-.brand span { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: #fff; color: #080d18; font-size: 12px; font-weight: 900; }
+.brand span, .brand-large span { display: grid; place-items: center; background: #fff; color: #080d18; font-weight: 900; }
+.brand span { width: 34px; height: 34px; border-radius: 10px; font-size: 12px; }
 .room-meta { color: #929db5; font-size: 13px; }
 .room-meta b { color: #fff; }
 .room { display: grid; grid-template-columns: 1fr 280px; min-height: calc(100vh - 64px); gap: 16px; padding: 16px; }
-.stage { min-width: 0; display: grid; place-items: center; border: 1px solid #1d2638; border-radius: 16px; background: #0d1422; }
-.placeholder { max-width: 460px; padding: 40px; text-align: center; color: #8c97af; }
+.stage { min-width: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); align-content: center; gap: 12px; border: 1px solid #1d2638; border-radius: 16px; padding: 12px; background: #0d1422; overflow: auto; }
+.placeholder { max-width: 460px; width: 100%; justify-self: center; align-self: center; padding: 40px; text-align: center; color: #8c97af; }
 .screen-icon { margin: 0 auto 18px; width: 64px; height: 64px; display: grid; place-items: center; border-radius: 18px; background: #172033; color: #dce4f8; font-size: 26px; }
 .placeholder h1 { margin: 0 0 8px; color: #e9edf8; font-size: 20px; }
 .placeholder p { margin: 0; line-height: 1.5; }
+.remote-video { display: block; width: 100%; max-height: calc(100vh - 120px); object-fit: contain; border-radius: 12px; background: #050912; border: 1px solid #222c40; }
 .sidebar { display: flex; flex-direction: column; padding: 18px; border: 1px solid #1d2638; border-radius: 16px; background: #0d1422; }
 .sidebar h2 { margin: 0 0 12px; font-size: 15px; }
-.participants { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.participants { display: flex; flex-direction: column; gap: 8px; flex: 1; overflow: auto; }
 .participant { padding: 10px 12px; border-radius: 10px; background: #141d2e; font-size: 13px; }
 button { width: 100%; margin-top: 10px; padding: 11px 12px; border: 0; border-radius: 10px; cursor: pointer; font-weight: 700; background: #fff; color: #080d18; }
+button:disabled { cursor: not-allowed; opacity: .55; }
 button.danger { background: #202b40; color: #fff; }
-@media (max-width: 800px) { .room { grid-template-columns: 1fr; } .sidebar { min-height: 260px; } }
+.landing { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.landing-card { width: min(560px, 100%); padding: 40px; border: 1px solid #1d2638; border-radius: 24px; background: #0d1422; box-shadow: 0 30px 80px rgba(0,0,0,.25); }
+.brand-large { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; font-size: 18px; }
+.brand-large span { width: 42px; height: 42px; border-radius: 13px; }
+.eyebrow { color: #8290ab; font-size: 11px; letter-spacing: .14em; font-weight: 800; }
+.landing h1 { margin: 10px 0 12px; font-size: clamp(38px, 7vw, 58px); line-height: .98; letter-spacing: -.04em; }
+.lead { color: #9aa5bd; line-height: 1.6; max-width: 480px; margin-bottom: 28px; }
+.landing label { display: block; margin-bottom: 7px; color: #9aa5bd; font-size: 12px; }
+.landing input { width: 100%; padding: 13px 14px; border: 1px solid #303a55; border-radius: 12px; outline: none; background: #080d18; color: #fff; }
+.landing input:focus { border-color: #73809a; }
+.join-row { display: grid; grid-template-columns: 1fr 120px; gap: 10px; margin-top: 10px; }
+.join-row button { margin-top: 0; }
+.actions button { margin-top: 10px; }
+.status { min-height: 18px; margin: 14px 0 0; text-align: center; color: #9ca6bf; font-size: 12px; }
+@media (max-width: 800px) { .room { grid-template-columns: 1fr; } .sidebar { min-height: 260px; } .stage { min-height: 55vh; grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .landing-card { padding: 28px 22px; } .join-row { grid-template-columns: 1fr; } .join-row button { margin-top: 0; } }
