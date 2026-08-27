@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ScreenParty • Sala</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand"><span>SP</span><strong>ScreenParty</strong></div>
+      <div class="room-meta">Sala <b id="roomCode">---</b> · <span id="memberCount">0</span> participantes</div>
+    </header>
+
+    <main class="room">
+      <section class="stage">
+        <div class="placeholder">
+          <div class="screen-icon">▣</div>
+          <h1>Nenhuma tela sendo compartilhada</h1>
+          <p>Quando alguém iniciar uma transmissão, ela aparecerá aqui.</p>
+        </div>
+      </section>
+
+      <aside class="sidebar">
+        <h2>Participantes</h2>
+        <div id="participants" class="participants"></div>
+        <button id="shareScreen">🖥️ Compartilhar minha tela</button>
+        <button id="leaveRoom" class="danger">Sair da sala</button>
+      </aside>
+    </main>
+
+    <script src="room.js"></script>
+  </body>
+</html>
